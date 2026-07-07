@@ -1,0 +1,129 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Premium Dark Theme Color System */
+  --bg-primary: #0b0f19;
+  --bg-secondary: rgba(17, 24, 39, 0.7);
+  --bg-tertiary: rgba(31, 41, 55, 0.5);
+  --border-glow: rgba(99, 102, 241, 0.15);
+  --border-light: rgba(255, 255, 255, 0.06);
+  
+  /* Accent glows */
+  --accent-blue: #3b82f6;
+  --accent-purple: #8b5cf6;
+  --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  --accent-glow: radial-gradient(circle at center, rgba(139, 92, 246, 0.15) 0%, transparent 70%);
+
+  /* Semantic feedback states */
+  --state-open: #f59e0b; /* Amber */
+  --state-merged: #10b981; /* Emerald */
+  --state-closed: #ef4444; /* Crimson */
+  --state-blocked: #d946ef; /* Fuchsia / Purple */
+  --state-ready: #3b82f6; /* Blue */
+
+  /* Text color hierarchy */
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+
+  /* Font Stack */
+  --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  font-family: var(--font-body);
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.08) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.08) 0px, transparent 50%);
+  background-attachment: fixed;
+}
+
+/* Glassmorphism utility */
+.glass-panel {
+  background: var(--bg-secondary);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-light);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+.glass-panel:hover {
+  border-color: var(--border-glow);
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--text-muted);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Loader Animation */
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  border-top-color: #3b82f6;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Fade In animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Pulse animation for blocked PRs */
+@keyframes pulse-blocked {
+  0% { box-shadow: 0 0 0 0 rgba(217, 70, 239, 0.4); }
+  70% { box-shadow: 0 0 0 8px rgba(217, 70, 239, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(217, 70, 239, 0); }
+}
+
+.pulse-blocked {
+  animation: pulse-blocked 2s infinite;
+}
