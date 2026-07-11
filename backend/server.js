@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectDB } from './config/db.js';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 
 import settingsRoutes from './routes/settingsRoutes.js';
 import repoRoutes from './routes/repoRoutes.js';
@@ -19,6 +21,16 @@ connectDB();
 seedMemoryDb();
 
 const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE']
+  }
+});
+
+// Make io available in routes
+app.set('io', io);
 
 // Middleware
 app.use(cors());
@@ -35,14 +47,26 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date() });
 });
 
+// Socket connection
+io.on('connection', (socket) => {
+  console.log('Client connected for real-time updates:', socket.id);
+  
+  socket.on('disconnect', () => {
+    console.log('Client disconnected:', socket.id);
+  });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Server Error:', err.stack);
   res.status(500).json({ message: err.message || 'Something went wrong on the server' });
 });
 
-const PORT = process.env.PORT || 5000;
+if (!process.env.VERCEL) {
+  const PORT = process.env.PORT || 5000;
+  httpServer.listen(PORT, () => {
+    console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+  });
+}
 
-app.listen(PORT, () => {
-  console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
-});
+export default app;

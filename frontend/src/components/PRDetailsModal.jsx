@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Sparkles, Link as LinkIcon, Trash2, Plus, CornerDownRight, ShieldAlert, FileText, Check } from 'lucide-react';
+import { X, Sparkles, Link as LinkIcon, Trash2, Plus, CornerDownRight, ShieldAlert, FileText, Check, GitPullRequest, GitMerge, GitBranch, Calendar } from 'lucide-react';
 
 export default function PRDetailsModal({ pr, allPrs, onClose, onAddDependency, onDeleteDependency, onGenerateSummary }) {
   const [activeTab, setActiveTab] = useState('summary'); // summary | diff | dependencies
@@ -8,6 +8,10 @@ export default function PRDetailsModal({ pr, allPrs, onClose, onAddDependency, o
   const [isLinking, setIsLinking] = useState(false);
 
   if (!pr) return null;
+
+  const isOpen = pr.state === 'open';
+  const isMerged = pr.state === 'merged';
+  const isClosed = pr.state === 'closed';
 
   // Filter possible dependencies: open PRs, not this PR, and not already a dependency
   const currentDepIds = pr.dependencies ? pr.dependencies.map(d => (d._id || d).toString()) : [];
@@ -44,12 +48,45 @@ export default function PRDetailsModal({ pr, allPrs, onClose, onAddDependency, o
 
   const getImpactColor = (score) => {
     switch (score?.toLowerCase()) {
-      case 'critical': return '#d946ef';
-      case 'high': return '#ef4444';
-      case 'medium': return '#f59e0b';
-      case 'low': return '#3b82f6';
-      default: return 'var(--text-muted)';
+      case 'critical': return '#f85149';
+      case 'high': return '#f85149';
+      case 'medium': return '#d29922';
+      case 'low': return '#58a6ff';
+      default: return '#8b949e';
     }
+  };
+
+  const getImpactBg = (score) => {
+    switch (score?.toLowerCase()) {
+      case 'critical': return 'rgba(248, 81, 73, 0.15)';
+      case 'high': return 'rgba(248, 81, 73, 0.15)';
+      case 'medium': return 'rgba(210, 153, 34, 0.15)';
+      case 'low': return 'rgba(88, 166, 255, 0.15)';
+      default: return 'rgba(139, 148, 158, 0.15)';
+    }
+  };
+
+  const getStatusColor = () => {
+    if (isMerged) return '#a371f7';
+    if (isClosed) return '#f85149';
+    return '#3fb950';
+  };
+
+  const getStatusBg = () => {
+    if (isMerged) return 'rgba(137, 87, 229, 0.15)';
+    if (isClosed) return 'rgba(248, 81, 73, 0.15)';
+    return 'rgba(56, 139, 60, 0.15)';
+  };
+
+  const getStatusBorder = () => {
+    if (isMerged) return 'rgba(137, 87, 229, 0.4)';
+    if (isClosed) return 'rgba(248, 81, 73, 0.4)';
+    return 'rgba(56, 139, 60, 0.4)';
+  };
+
+  const getStatusIcon = () => {
+    if (isMerged) return <GitMerge size={14} color="#ffffff" />;
+    return <GitPullRequest size={14} color="#ffffff" />;
   };
 
   return (
@@ -59,8 +96,8 @@ export default function PRDetailsModal({ pr, allPrs, onClose, onAddDependency, o
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.75)',
-      backdropFilter: 'blur(8px)',
+      backgroundColor: 'rgba(1, 4, 9, 0.8)',
+      backdropFilter: 'blur(4px)',
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
@@ -69,183 +106,178 @@ export default function PRDetailsModal({ pr, allPrs, onClose, onAddDependency, o
     }}>
       <div className="glass-panel animate-fade-in" style={{
         width: '100%',
-        maxWidth: '840px',
-        height: '90vh',
+        maxWidth: '920px',
+        height: '92vh',
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        backgroundColor: '#0d1117',
+        border: '1px solid #30363d',
+        borderRadius: '6px'
       }}>
-        {/* Header */}
-        <div style={{ padding: '24px 30px', borderBottom: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                {pr.repository ? pr.repository.name : 'Unknown Repo'}
-              </span>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>•</span>
-              <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '600' }}>
-                PR #{pr.number}
-              </span>
+        {/* Top Header: Title, State, Branch info */}
+        <div style={{ padding: '24px 24px 16px 24px', borderBottom: '1px solid #30363d', backgroundColor: '#161b22' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div style={{ flex: 1 }}>
+              <h2 style={{ fontSize: '24px', fontWeight: 'normal', lineHeight: '1.25', color: '#f0f6fc', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                <span>{pr.title}</span>
+                <span style={{ color: '#8b949e', fontWeight: '300' }}>#{pr.number}</span>
+              </h2>
             </div>
-            <h2 style={{ fontSize: '18px', fontWeight: '700', lineHeight: '1.4', color: 'var(--text-primary)' }}>
-              {pr.title}
-            </h2>
-            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '6px' }}>
-              Opened by <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{pr.author.username}</span> • {pr.changedFilesCount} files changed
-            </p>
-          </div>
 
-          <button
-            onClick={onClose}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--text-secondary)',
-              cursor: 'pointer',
-              padding: '6px',
-              borderRadius: '6px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.2s'
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'; e.currentTarget.style.color = '#fff'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
-          >
-            <X size={18} />
-          </button>
-        </div>
-
-        {/* Tab Navigation */}
-        <div style={{
-          display: 'flex',
-          padding: '0 30px',
-          borderBottom: '1px solid var(--border-light)',
-          background: 'rgba(0,0,0,0.1)',
-          gap: '24px'
-        }}>
-          {['summary', 'diff', 'dependencies'].map((tab) => (
             <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
+              onClick={onClose}
               style={{
                 background: 'none',
                 border: 'none',
-                color: activeTab === tab ? 'var(--text-primary)' : 'var(--text-muted)',
-                padding: '14px 0',
+                color: '#8b949e',
                 cursor: 'pointer',
-                fontSize: '13px',
-                fontWeight: '700',
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-                position: 'relative',
+                padding: '6px',
+                borderRadius: '6px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '6px'
+                justifyContent: 'center',
+                transition: 'all 0.15s'
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#21262d'; e.currentTarget.style.color = '#f0f6fc'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#8b949e'; }}
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          {/* GitHub Style State Info Banner */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginTop: '12px', borderBottom: '1px solid #21262d', paddingBottom: '16px' }}>
+            <div style={{
+              backgroundColor: getStatusColor(),
+              color: '#ffffff',
+              padding: '4px 12px',
+              borderRadius: '2em',
+              fontSize: '13px',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}>
+              {getStatusIcon()}
+              <span style={{ textTransform: 'capitalize' }}>{pr.state}</span>
+            </div>
+            
+            <div style={{ fontSize: '13px', color: '#8b949e' }}>
+              <span style={{ fontWeight: '600', color: '#c9d1d9' }}>{pr.author.username}</span> wants to merge branch{' '}
+              <span style={{ fontFamily: 'var(--font-mono)', background: '#21262d', padding: '2px 6px', borderRadius: '4px', border: '1px solid #30363d', color: '#c9d1d9' }}>
+                {pr.sourceBranch}
+              </span>{' '}
+              into{' '}
+              <span style={{ fontFamily: 'var(--font-mono)', background: '#21262d', padding: '2px 6px', borderRadius: '4px', border: '1px solid #30363d', color: '#c9d1d9' }}>
+                {pr.targetBranch}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="gh-tab-nav" style={{ padding: '0 24px', backgroundColor: '#161b22' }}>
+          {[
+            { id: 'summary', label: 'AI Review', icon: <Sparkles size={14} /> },
+            { id: 'diff', label: 'Files changed', icon: <FileText size={14} /> },
+            { id: 'dependencies', label: `Dependencies (${pr.dependencies ? pr.dependencies.length : 0})`, icon: <LinkIcon size={14} /> }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`gh-tab ${activeTab === tab.id ? 'active' : ''}`}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                height: '48px',
+                outline: 'none'
               }}
             >
-              {tab === 'summary' && <Sparkles size={14} color={activeTab === 'summary' ? 'var(--accent-purple)' : undefined} />}
-              {tab === 'diff' && <FileText size={14} />}
-              {tab === 'dependencies' && <LinkIcon size={14} />}
-              <span style={{ textTransform: 'capitalize' }}>
-                {tab === 'summary' ? 'AI Review' : tab}
-              </span>
-              {activeTab === tab && (
-                <div style={{
-                  position: 'absolute',
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  height: '2px',
-                  background: 'var(--accent-gradient)'
-                }} />
-              )}
+              {tab.icon}
+              <span>{tab.label}</span>
             </button>
           ))}
         </div>
 
         {/* Modal Scrollable Content */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '30px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', display: 'flex', flexDirection: 'column', backgroundColor: '#0d1117' }}>
           
-          {/* TAB 1: AI Code Summary */}
+          {/* TAB 1: AI Code Summary - Styled exactly like GitHub Bot Comment */}
           {activeTab === 'summary' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', animation: 'fadeIn 0.2s ease-out' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', animation: 'fadeIn 0.15s ease-out' }}>
               {pr.aiSummary ? (
                 <>
-                  {/* Summary & Impact Score Banner */}
-                  <div className="glass-panel" style={{
-                    padding: '20px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '12px',
-                    borderLeft: `4px solid ${getImpactColor(pr.aiSummary.impactScore)}`
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>
-                        Gemini AI Assessment
-                      </span>
-                      <div style={{
-                        background: 'rgba(255,255,255,0.05)',
-                        border: '1px solid var(--border-light)',
-                        padding: '4px 10px',
-                        borderRadius: '6px',
-                        fontSize: '11px',
-                        fontWeight: '700',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px'
-                      }}>
-                        <span>Risk Impact:</span>
-                        <span style={{ color: getImpactColor(pr.aiSummary.impactScore) }}>
-                          {pr.aiSummary.impactScore}
+                  {/* Bot comment box */}
+                  <div className="gh-comment">
+                    <div className="gh-comment-header">
+                      <div className="flex items-center gap-2">
+                        <span className="author-name">gemini-ai-assistant</span> commented
+                        <span className="badge" style={{ backgroundColor: '#21262d', border: '1px solid #30363d', color: '#8b949e', fontSize: '10px', padding: '0 6px', height: '18px', borderRadius: '4px' }}>
+                          bot
                         </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div style={{
+                          background: getImpactBg(pr.aiSummary.impactScore),
+                          border: `1px solid ${getImpactColor(pr.aiSummary.impactScore)}`,
+                          color: getImpactColor(pr.aiSummary.impactScore),
+                          padding: '1px 8px',
+                          borderRadius: '2em',
+                          fontSize: '11px',
+                          fontWeight: '600'
+                        }}>
+                          Risk: {pr.aiSummary.impactScore}
+                        </div>
                       </div>
                     </div>
                     
-                    <p style={{ fontSize: '14px', lineHeight: '1.6', fontWeight: '500', color: 'var(--text-primary)' }}>
-                      {pr.aiSummary.summary}
-                    </p>
-                  </div>
+                    <div className="gh-comment-body">
+                      {/* Summary Text */}
+                      <p style={{ fontSize: '14px', lineHeight: '1.6', color: '#c9d1d9', marginBottom: '16px', fontWeight: 'normal' }}>
+                        {pr.aiSummary.summary}
+                      </p>
 
-                  {/* Bullet points */}
-                  <div>
-                    <h3 style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '12px' }}>
-                      Key Changes
-                    </h3>
-                    <ul style={{ display: 'flex', flexDirection: 'column', gap: '8px', listStyleType: 'none', paddingLeft: 0 }}>
-                      {pr.aiSummary.bulletPoints.map((point, index) => (
-                        <li key={index} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '13px', lineHeight: '1.5', color: 'var(--text-primary)' }}>
-                          <Check size={14} color="#10b981" style={{ flexShrink: 0, marginTop: '3px' }} />
-                          <span>{point}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                      {/* Bullet points section */}
+                      <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#f0f6fc', marginBottom: '12px', borderBottom: '1px solid #21262d', paddingBottom: '8px' }}>
+                        Key Changes
+                      </h3>
+                      <ul style={{ display: 'flex', flexDirection: 'column', gap: '8px', listStyleType: 'none', paddingLeft: 0, marginBottom: '16px' }}>
+                        {pr.aiSummary.bulletPoints.map((point, index) => (
+                          <li key={index} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '13px', lineHeight: '1.5', color: '#c9d1d9' }}>
+                            <Check size={14} color="#3fb950" style={{ flexShrink: 0, marginTop: '3px' }} />
+                            <span>{point}</span>
+                          </li>
+                        ))}
+                      </ul>
 
-                  {/* Security/Impact Review */}
-                  {pr.aiSummary.rawDiffAnalysis && (
-                    <div style={{
-                      background: 'rgba(239, 68, 68, 0.03)',
-                      border: '1px solid rgba(239, 68, 68, 0.1)',
-                      borderRadius: '12px',
-                      padding: '16px 20px',
-                      display: 'flex',
-                      gap: '12px',
-                      alignItems: 'flex-start',
-                      marginTop: '10px'
-                    }}>
-                      <ShieldAlert size={18} color="#ef4444" style={{ flexShrink: 0, marginTop: '2px' }} />
-                      <div>
-                        <h4 style={{ fontSize: '13px', fontWeight: '700', color: '#ef4444', marginBottom: '4px' }}>
-                          Security & Maintenance Analysis
-                        </h4>
-                        <p style={{ fontSize: '12px', lineHeight: '1.5', color: 'var(--text-secondary)' }}>
-                          {pr.aiSummary.rawDiffAnalysis}
-                        </p>
-                      </div>
+                      {/* Security/Impact Review */}
+                      {pr.aiSummary.rawDiffAnalysis && (
+                        <div style={{
+                          background: 'rgba(248, 81, 73, 0.05)',
+                          border: '1px solid rgba(248, 81, 73, 0.2)',
+                          borderRadius: '6px',
+                          padding: '12px 16px',
+                          display: 'flex',
+                          gap: '12px',
+                          alignItems: 'flex-start',
+                          marginTop: '16px'
+                        }}>
+                          <ShieldAlert size={18} color="#f85149" style={{ flexShrink: 0, marginTop: '2px' }} />
+                          <div>
+                            <h4 style={{ fontSize: '13px', fontWeight: '600', color: '#f85149', marginBottom: '4px' }}>
+                              Security & Maintenance Analysis
+                            </h4>
+                            <p style={{ fontSize: '12px', lineHeight: '1.5', color: '#8b949e' }}>
+                              {pr.aiSummary.rawDiffAnalysis}
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </>
               ) : (
                 <div style={{
@@ -254,36 +286,30 @@ export default function PRDetailsModal({ pr, allPrs, onClose, onAddDependency, o
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '16px',
-                  padding: '40px 0',
+                  padding: '48px 0',
                   textAlign: 'center'
                 }}>
-                  <Sparkles size={36} color="var(--text-muted)" className={isGeneratingSummary ? 'spin-anim' : ''} style={{
+                  <Sparkles size={36} color="#8b949e" style={{
                     animation: isGeneratingSummary ? 'spin 2s linear infinite' : 'none'
                   }} />
                   <div>
-                    <h3 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '6px' }}>
+                    <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '6px', color: '#f0f6fc' }}>
                       Generate AI Summary Review
                     </h3>
-                    <p style={{ fontSize: '12px', color: 'var(--text-secondary)', maxWidth: '400px', lineHeight: '1.5' }}>
+                    <p style={{ fontSize: '13px', color: '#8b949e', maxWidth: '400px', lineHeight: '1.5' }}>
                       Get a detailed audit of modifications, file impact ratings, and security risks parsed by Gemini.
                     </p>
                   </div>
                   <button
                     onClick={handleGenerateAI}
                     disabled={isGeneratingSummary}
+                    className="btn btn-primary"
                     style={{
-                      background: 'var(--accent-gradient)',
-                      border: 'none',
-                      color: '#fff',
-                      padding: '10px 24px',
-                      borderRadius: '10px',
-                      cursor: 'pointer',
-                      fontWeight: '700',
+                      padding: '8px 24px',
                       fontSize: '13px',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '8px',
-                      boxShadow: '0 4px 12px rgba(139, 92, 246, 0.2)'
                     }}
                   >
                     <Sparkles size={14} />
@@ -294,69 +320,81 @@ export default function PRDetailsModal({ pr, allPrs, onClose, onAddDependency, o
             </div>
           )}
 
-          {/* TAB 2: File Diff View */}
+          {/* TAB 2: File Diff View - Styled like GitHub Files Changed */}
           {activeTab === 'diff' && (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '14px', animation: 'fadeIn 0.2s ease-out' }}>
-              <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '16px', animation: 'fadeIn 0.15s ease-out' }}>
+              <div style={{ fontSize: '13px', color: '#8b949e' }}>
                 Showing raw pull request diff file changes:
               </div>
-              <pre style={{
-                background: '#040711',
-                border: '1px solid var(--border-light)',
-                borderRadius: '10px',
-                padding: '16px 20px',
-                fontSize: '12px',
-                fontFamily: 'monospace',
-                overflowX: 'auto',
-                lineHeight: '1.6',
-                whiteSpace: 'pre-wrap'
-              }}>
-                {pr.diffText ? pr.diffText.split('\n').map((line, idx) => {
-                  let color = 'var(--text-primary)';
-                  let bg = 'transparent';
-                  if (line.startsWith('+') && !line.startsWith('+++')) {
-                    color = '#10b981';
-                    bg = 'rgba(16, 185, 129, 0.06)';
-                  } else if (line.startsWith('-') && !line.startsWith('---')) {
-                    color = '#ef4444';
-                    bg = 'rgba(239, 68, 68, 0.06)';
-                  } else if (line.startsWith('@@')) {
-                    color = 'var(--accent-blue)';
-                    bg = 'rgba(59, 130, 246, 0.03)';
-                  }
-                  return (
-                    <div key={idx} style={{ color, backgroundColor: bg, padding: '0 4px' }}>
-                      {line}
-                    </div>
-                  );
-                }) : '// No diff code retrieved for this PR.'}
-              </pre>
+              
+              <div className="gh-diff-file">
+                <div className="gh-diff-header">
+                  <span>diff --git a/source b/target</span>
+                  <span style={{ color: '#8b949e' }}>
+                    <span style={{ color: '#3fb950', marginRight: '8px' }}>+{pr.additions}</span>
+                    <span style={{ color: '#f85149' }}>-{pr.deletions}</span>
+                  </span>
+                </div>
+                <pre style={{
+                  background: '#0d1117',
+                  padding: '16px',
+                  fontSize: '12px',
+                  fontFamily: 'var(--font-mono)',
+                  overflowX: 'auto',
+                  lineHeight: '1.6',
+                  whiteSpace: 'pre-wrap',
+                  margin: 0
+                }}>
+                  {pr.diffText ? pr.diffText.split('\n').map((line, idx) => {
+                    let color = '#c9d1d9';
+                    let bg = 'transparent';
+                    if (line.startsWith('+') && !line.startsWith('+++')) {
+                      color = '#3fb950';
+                      bg = 'rgba(56, 139, 60, 0.15)';
+                    } else if (line.startsWith('-') && !line.startsWith('---')) {
+                      color = '#f85149';
+                      bg = 'rgba(248, 81, 73, 0.15)';
+                    } else if (line.startsWith('@@')) {
+                      color = '#58a6ff';
+                      bg = 'rgba(88, 166, 255, 0.1)';
+                    }
+                    return (
+                      <div key={idx} style={{ color, backgroundColor: bg, padding: '0 8px', borderRadius: '2px' }}>
+                        {line}
+                      </div>
+                    );
+                  }) : <div style={{ color: '#8b949e', fontStyle: 'italic' }}>// No diff code retrieved for this PR.</div>}
+                </pre>
+              </div>
             </div>
           )}
 
           {/* TAB 3: Dependencies Management */}
           {activeTab === 'dependencies' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', animation: 'fadeIn 0.2s ease-out' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', animation: 'fadeIn 0.15s ease-out' }}>
               
               {/* Linked dependencies */}
               <div>
-                <h3 style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '12px' }}>
+                <h3 style={{ fontSize: '13px', fontWeight: '600', color: '#8b949e', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '12px' }}>
                   Current Dependencies
                 </h3>
                 
                 {pr.dependencies && pr.dependencies.length > 0 ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     {pr.dependencies.map((dep) => {
                       const depPR = allPrs.find(p => p._id.toString() === (dep._id || dep).toString());
                       if (!depPR) return null;
+
+                      const isDepOpen = depPR.state === 'open';
+                      const isDepMerged = depPR.state === 'merged';
 
                       return (
                         <div 
                           key={depPR._id} 
                           style={{
-                            background: 'var(--bg-tertiary)',
-                            border: '1px solid var(--border-light)',
-                            borderRadius: '10px',
+                            background: '#161b22',
+                            border: '1px solid #30363d',
+                            borderRadius: '6px',
                             padding: '12px 16px',
                             display: 'flex',
                             justifyContent: 'space-between',
@@ -364,13 +402,20 @@ export default function PRDetailsModal({ pr, allPrs, onClose, onAddDependency, o
                           }}
                         >
                           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <CornerDownRight size={14} color="var(--text-muted)" />
+                            <CornerDownRight size={14} color="#8b949e" />
                             <div>
-                              <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>
+                              <div style={{ fontSize: '13px', fontWeight: '600', color: '#f0f6fc' }}>
                                 #{depPR.number} {depPR.title}
                               </div>
-                              <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px', textTransform: 'uppercase' }}>
-                                {depPR.repository ? depPR.repository.repoName : 'repo'} • Status: {depPR.state}
+                              <div style={{ fontSize: '11px', color: '#8b949e', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span style={{ textTransform: 'none' }}>{depPR.repository ? `${depPR.repository.owner}/${depPR.repository.repoName}` : 'repo'}</span>
+                                <span>•</span>
+                                <span style={{
+                                  color: isDepMerged ? '#a371f7' : isDepOpen ? '#3fb950' : '#f85149',
+                                  fontWeight: '600'
+                                }}>
+                                  {depPR.state}
+                                </span>
                               </div>
                             </div>
                           </div>
@@ -381,20 +426,18 @@ export default function PRDetailsModal({ pr, allPrs, onClose, onAddDependency, o
                                 onDeleteDependency(pr._id, depPR._id);
                               }
                             }}
+                            className="flex justify-center items-center"
                             style={{
                               background: 'none',
                               border: 'none',
-                              color: 'var(--text-muted)',
+                              color: '#8b949e',
                               cursor: 'pointer',
                               padding: '8px',
                               borderRadius: '6px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              transition: 'all 0.2s'
+                              transition: 'all 0.15s'
                             }}
-                            onMouseEnter={(e) => { e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.1)'; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.backgroundColor = 'transparent'; }}
+                            onMouseEnter={(e) => { e.currentTarget.style.color = '#f85149'; e.currentTarget.style.backgroundColor = 'rgba(248, 81, 73, 0.15)'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.color = '#8b949e'; e.currentTarget.style.backgroundColor = 'transparent'; }}
                           >
                             <Trash2 size={13} />
                           </button>
@@ -403,7 +446,7 @@ export default function PRDetailsModal({ pr, allPrs, onClose, onAddDependency, o
                     })}
                   </div>
                 ) : (
-                  <p style={{ fontSize: '13px', color: 'var(--text-muted)', italic: 'true' }}>
+                  <p style={{ fontSize: '13px', color: '#8b949e', fontStyle: 'italic' }}>
                     This pull request has no defined dependencies.
                   </p>
                 )}
@@ -411,8 +454,8 @@ export default function PRDetailsModal({ pr, allPrs, onClose, onAddDependency, o
 
               {/* Link new dependency */}
               {pr.state === 'open' && (
-                <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: '24px' }}>
-                  <h3 style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '12px' }}>
+                <div style={{ borderTop: '1px solid #30363d', paddingTop: '24px' }}>
+                  <h3 style={{ fontSize: '13px', fontWeight: '600', color: '#8b949e', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '12px' }}>
                     Add Dependency Link
                   </h3>
                   
@@ -423,11 +466,11 @@ export default function PRDetailsModal({ pr, allPrs, onClose, onAddDependency, o
                         onChange={(e) => setSelectedDepId(e.target.value)}
                         style={{
                           flex: 1,
-                          background: 'var(--bg-tertiary)',
-                          border: '1px solid var(--border-light)',
-                          padding: '12px',
-                          borderRadius: '10px',
-                          color: 'var(--text-primary)',
+                          background: '#0d1117',
+                          border: '1px solid #30363d',
+                          padding: '8px 12px',
+                          borderRadius: '6px',
+                          color: '#c9d1d9',
                           fontSize: '13px',
                           outline: 'none'
                         }}
@@ -443,14 +486,9 @@ export default function PRDetailsModal({ pr, allPrs, onClose, onAddDependency, o
                       <button
                         type="submit"
                         disabled={isLinking || !selectedDepId}
+                        className="btn btn-primary"
                         style={{
-                          background: 'var(--accent-gradient)',
-                          border: 'none',
-                          color: '#fff',
-                          padding: '12px 20px',
-                          borderRadius: '10px',
-                          cursor: 'pointer',
-                          fontWeight: '700',
+                          padding: '8px 20px',
                           fontSize: '13px',
                           display: 'flex',
                           alignItems: 'center',
@@ -459,11 +497,11 @@ export default function PRDetailsModal({ pr, allPrs, onClose, onAddDependency, o
                         }}
                       >
                         <Plus size={14} />
-                        <span>Link</span>
+                        <span>Link Dependency</span>
                       </button>
                     </form>
                   ) : (
-                    <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                    <p style={{ fontSize: '12px', color: '#8b949e' }}>
                       No other open pull requests available to link as dependencies.
                     </p>
                   )}

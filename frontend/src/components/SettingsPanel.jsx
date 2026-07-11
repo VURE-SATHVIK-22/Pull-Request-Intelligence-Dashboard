@@ -35,8 +35,8 @@ export default function SettingsPanel({ isOpen, onClose, settings, onSave }) {
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.75)',
-      backdropFilter: 'blur(8px)',
+      backgroundColor: 'rgba(1, 4, 9, 0.8)',
+      backdropFilter: 'blur(4px)',
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
@@ -45,9 +45,12 @@ export default function SettingsPanel({ isOpen, onClose, settings, onSave }) {
       <div className="glass-panel" style={{
         width: '100%',
         maxWidth: '480px',
-        padding: '30px',
+        padding: '24px',
         position: 'relative',
-        animation: 'fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards'
+        backgroundColor: '#161b22',
+        border: '1px solid #30363d',
+        borderRadius: '6px',
+        animation: 'fadeIn 0.15s cubic-bezier(0, 0, 0.2, 1) forwards'
       }}>
         {/* Close trigger */}
         <button
@@ -58,33 +61,33 @@ export default function SettingsPanel({ isOpen, onClose, settings, onSave }) {
             right: '20px',
             background: 'none',
             border: 'none',
-            color: 'var(--text-secondary)',
+            color: '#8b949e',
             cursor: 'pointer',
             padding: '4px',
             borderRadius: '6px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            transition: 'all 0.2s'
+            transition: 'all 0.15s'
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'; e.currentTarget.style.color = '#fff'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#21262d'; e.currentTarget.style.color = '#f0f6fc'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#8b949e'; }}
         >
           <X size={16} />
         </button>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-          <Key size={20} color="var(--accent-purple)" />
-          <h2 style={{ fontSize: '18px', fontWeight: '700' }}>API Settings</h2>
+          <Key size={18} color="#58a6ff" />
+          <h2 style={{ fontSize: '16px', fontWeight: '600', color: '#f0f6fc' }}>API Settings</h2>
         </div>
-        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '24px' }}>
+        <p style={{ fontSize: '13px', color: '#8b949e', marginBottom: '20px' }}>
           Configure keys to pull repository diffs and run AI summarization.
         </p>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* GitHub Token Input */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)' }}>
+            <label style={{ fontSize: '12px', fontWeight: '600', color: '#c9d1d9' }}>
               GitHub Personal Access Token (PAT)
             </label>
             <input
@@ -93,23 +96,23 @@ export default function SettingsPanel({ isOpen, onClose, settings, onSave }) {
               value={githubToken}
               onChange={(e) => setGithubToken(e.target.value)}
               style={{
-                background: 'var(--bg-tertiary)',
-                border: '1px solid var(--border-light)',
-                padding: '12px',
-                borderRadius: '10px',
-                color: 'var(--text-primary)',
+                background: '#0d1117',
+                border: '1px solid #30363d',
+                padding: '8px 12px',
+                borderRadius: '6px',
+                color: '#c9d1d9',
                 fontSize: '13px',
                 outline: 'none'
               }}
             />
-            <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+            <span style={{ fontSize: '11px', color: '#8b949e' }}>
               Required to access private repositories or avoid high-volume GitHub API rate limits.
             </span>
           </div>
 
           {/* Gemini API Key Input */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)' }}>
+            <label style={{ fontSize: '12px', fontWeight: '600', color: '#c9d1d9' }}>
               Gemini API Key (Google AI Studio)
             </label>
             <input
@@ -118,11 +121,11 @@ export default function SettingsPanel({ isOpen, onClose, settings, onSave }) {
               value={geminiApiKey}
               onChange={(e) => setGeminiApiKey(e.target.value)}
               style={{
-                background: 'var(--bg-tertiary)',
-                border: '1px solid var(--border-light)',
-                padding: '12px',
-                borderRadius: '10px',
-                color: 'var(--text-primary)',
+                background: '#0d1117',
+                border: '1px solid #30363d',
+                padding: '8px 12px',
+                borderRadius: '6px',
+                color: '#c9d1d9',
                 fontSize: '13px',
                 outline: 'none'
               }}
@@ -131,8 +134,8 @@ export default function SettingsPanel({ isOpen, onClose, settings, onSave }) {
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              fontSize: '10px',
-              color: 'var(--text-muted)',
+              fontSize: '11px',
+              color: '#8b949e',
               marginTop: '2px'
             }}>
               <span>Required for AI code reviews. Fallback logic operates if key is not set.</span>
@@ -142,15 +145,15 @@ export default function SettingsPanel({ isOpen, onClose, settings, onSave }) {
           <div style={{
             display: 'flex',
             gap: '8px',
-            background: 'rgba(59, 130, 246, 0.08)',
-            border: '1px solid rgba(59, 130, 246, 0.15)',
+            background: 'rgba(88, 166, 255, 0.05)',
+            border: '1px solid rgba(88, 166, 255, 0.2)',
             padding: '12px',
-            borderRadius: '10px',
+            borderRadius: '6px',
             alignItems: 'flex-start',
             marginTop: '8px'
           }}>
-            <ShieldAlert size={16} color="var(--accent-blue)" style={{ flexShrink: 0, marginTop: '2px' }} />
-            <p style={{ fontSize: '11px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+            <ShieldAlert size={16} color="#58a6ff" style={{ flexShrink: 0, marginTop: '2px' }} />
+            <p style={{ fontSize: '11px', color: '#8b949e', lineHeight: '1.4' }}>
               Your credentials are saved on the local backend and never shared externally.
             </p>
           </div>
@@ -159,17 +162,11 @@ export default function SettingsPanel({ isOpen, onClose, settings, onSave }) {
           <button
             type="submit"
             disabled={isSubmitting}
+            className="btn btn-primary"
             style={{
-              background: 'var(--accent-gradient)',
-              border: 'none',
-              color: '#fff',
-              padding: '12px 20px',
-              borderRadius: '10px',
-              cursor: 'pointer',
-              fontWeight: '600',
+              padding: '8px 20px',
               fontSize: '13px',
               textAlign: 'center',
-              boxShadow: '0 4px 12px rgba(139, 92, 246, 0.2)',
               marginTop: '10px'
             }}
           >

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, GitBranch, FolderGit } from 'lucide-react';
+import { Plus, Trash2, GitBranch, FolderGit, BookOpen } from 'lucide-react';
 
 export default function RepoManager({ repos, selectedRepo, onSelectRepo, onAddRepo, onDeleteRepo }) {
   const [newRepoName, setNewRepoName] = useState('');
@@ -21,25 +21,27 @@ export default function RepoManager({ repos, selectedRepo, onSelectRepo, onAddRe
   };
 
   return (
-    <div className="glass-panel" style={{
-      padding: '24px',
-      display: 'flex',
+    <div className="glass-panel flex" style={{
+      padding: '16px',
       flexDirection: 'column',
-      gap: '20px',
+      gap: '16px',
       height: 'fit-content',
-      minWidth: '280px'
+      minWidth: '280px',
+      border: '1px solid #30363d',
+      backgroundColor: '#161b22',
+      borderRadius: '6px'
     }}>
       <div>
-        <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '4px', letterSpacing: '-0.01em' }}>
+        <h3 className="text-sm font-semibold text-white" style={{ marginBottom: '4px' }}>
           Repositories
         </h3>
-        <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+        <p className="text-xs text-secondary">
           Track and filter branches.
         </p>
       </div>
 
       {/* Add Repo Form */}
-      <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '8px' }}>
+      <form onSubmit={handleSubmit} className="flex gap-2">
         <input
           type="text"
           placeholder="owner/repo"
@@ -48,64 +50,50 @@ export default function RepoManager({ repos, selectedRepo, onSelectRepo, onAddRe
           disabled={isSubmitting}
           style={{
             flex: 1,
-            background: 'var(--bg-tertiary)',
-            border: '1px solid var(--border-light)',
-            padding: '10px 12px',
-            borderRadius: '10px',
-            color: 'var(--text-primary)',
-            fontSize: '13px',
-            outline: 'none',
-            transition: 'border-color 0.2s'
+            background: '#0d1117',
+            border: '1px solid #30363d',
+            padding: '5px 12px',
+            borderRadius: '6px',
+            color: '#c9d1d9',
+            fontSize: '13px'
           }}
-          onFocus={(e) => e.target.style.borderColor = 'var(--accent-blue)'}
-          onBlur={(e) => e.target.style.borderColor = 'var(--border-light)'}
         />
         <button
           type="submit"
           disabled={isSubmitting || !newRepoName.includes('/')}
+          className="btn btn-primary"
           style={{
-            background: 'var(--accent-gradient)',
-            border: 'none',
-            color: '#fff',
-            padding: '10px',
-            borderRadius: '10px',
-            cursor: 'pointer',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            opacity: (!newRepoName.includes('/') || isSubmitting) ? 0.5 : 1,
-            transition: 'transform 0.2s'
+            padding: '5px 12px',
+            fontSize: '13px',
+            opacity: (!newRepoName.includes('/') || isSubmitting) ? 0.5 : 1
           }}
         >
-          <Plus size={16} />
+          <Plus size={14} />
         </button>
       </form>
 
       {/* Repos list */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div className="flex" style={{ flexDirection: 'column', gap: '2px' }}>
         {/* All Repos Option */}
         <button
           onClick={() => onSelectRepo(null)}
+          className="flex items-center gap-2"
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            padding: '10px 12px',
-            borderRadius: '10px',
-            border: '1px solid',
-            borderColor: selectedRepo === null ? 'var(--accent-blue)' : 'transparent',
-            background: selectedRepo === null ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
-            color: selectedRepo === null ? 'var(--text-primary)' : 'var(--text-secondary)',
+            padding: '6px 12px',
+            borderRadius: '6px',
+            border: 'none',
+            background: selectedRepo === null ? '#21262d' : 'transparent',
+            color: selectedRepo === null ? '#f0f6fc' : '#8b949e',
             textAlign: 'left',
-            cursor: 'pointer',
-            fontSize: '13px',
-            fontWeight: '600',
             width: '100%',
-            transition: 'all 0.2s'
+            cursor: 'pointer',
+            fontWeight: selectedRepo === null ? '600' : 'normal'
           }}
+          onMouseEnter={(e) => { if (selectedRepo !== null) e.currentTarget.style.backgroundColor = '#1f242c'; }}
+          onMouseLeave={(e) => { if (selectedRepo !== null) e.currentTarget.style.backgroundColor = 'transparent'; }}
         >
-          <FolderGit size={14} color={selectedRepo === null ? '#3b82f6' : '#94a3b8'} />
-          <span>All Repositories</span>
+          <FolderGit size={14} color={selectedRepo === null ? '#58a6ff' : '#8b949e'} />
+          <span className="text-sm">All Repositories</span>
         </button>
 
         {repos.map((repo) => {
@@ -113,38 +101,32 @@ export default function RepoManager({ repos, selectedRepo, onSelectRepo, onAddRe
           return (
             <div 
               key={repo._id} 
+              className="flex justify-between items-center"
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '4px 8px 4px 12px',
-                borderRadius: '10px',
-                border: '1px solid',
-                borderColor: isSelected ? 'var(--accent-blue)' : 'transparent',
-                background: isSelected ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
-                transition: 'all 0.2s'
+                borderRadius: '6px',
+                background: isSelected ? '#21262d' : 'transparent',
+                transition: 'background-color 0.15s'
               }}
+              onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = '#1f242c'; }}
+              onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = 'transparent'; }}
             >
               <button
                 onClick={() => onSelectRepo(repo)}
+                className="flex items-center gap-2"
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
                   background: 'none',
                   border: 'none',
-                  color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  color: isSelected ? '#f0f6fc' : '#8b949e',
                   textAlign: 'left',
                   cursor: 'pointer',
-                  fontSize: '13px',
-                  fontWeight: '600',
                   flex: 1,
-                  padding: '6px 0',
-                  overflow: 'hidden'
+                  padding: '6px 12px',
+                  overflow: 'hidden',
+                  fontWeight: isSelected ? '600' : 'normal'
                 }}
               >
-                <GitBranch size={14} color={isSelected ? '#3b82f6' : '#64748b'} style={{ flexShrink: 0 }} />
-                <span style={{ 
+                <BookOpen size={14} color={isSelected ? '#58a6ff' : '#8b949e'} style={{ flexShrink: 0 }} />
+                <span className="text-sm" style={{ 
                   whiteSpace: 'nowrap', 
                   overflow: 'hidden', 
                   textOverflow: 'ellipsis',
@@ -153,14 +135,13 @@ export default function RepoManager({ repos, selectedRepo, onSelectRepo, onAddRe
                   {repo.owner}/{repo.repoName}
                 </span>
                 {repo.openPrCount > 0 && (
-                  <span style={{
-                    fontSize: '10px',
-                    background: 'rgba(245, 158, 11, 0.15)',
-                    color: 'var(--state-open)',
-                    padding: '2px 6px',
-                    borderRadius: '10px',
-                    fontWeight: '700',
-                    marginLeft: 'auto'
+                  <span className="badge" style={{
+                    fontSize: '11px',
+                    background: '#30363d',
+                    color: '#8b949e',
+                    padding: '0 6px',
+                    marginLeft: 'auto',
+                    borderRadius: '2em'
                   }}>
                     {repo.openPrCount}
                   </span>
@@ -173,20 +154,19 @@ export default function RepoManager({ repos, selectedRepo, onSelectRepo, onAddRe
                     onDeleteRepo(repo._id);
                   }
                 }}
+                className="flex justify-center items-center"
                 style={{
                   background: 'none',
                   border: 'none',
-                  color: 'var(--text-muted)',
+                  color: '#8b949e',
                   cursor: 'pointer',
-                  padding: '8px',
+                  padding: '6px',
                   borderRadius: '6px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  transition: 'all 0.2s'
+                  marginRight: '6px',
+                  transition: 'all 0.15s'
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.1)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.backgroundColor = 'transparent'; }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = '#f85149'; e.currentTarget.style.backgroundColor = 'rgba(248, 81, 73, 0.15)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = '#8b949e'; e.currentTarget.style.backgroundColor = 'transparent'; }}
               >
                 <Trash2 size={12} />
               </button>
@@ -197,3 +177,4 @@ export default function RepoManager({ repos, selectedRepo, onSelectRepo, onAddRe
     </div>
   );
 }
+

@@ -114,7 +114,7 @@ export default function DependencyGraph({ prs, onSelectPr }) {
 
             newLines.push({
               path: `M ${startX} ${startY} C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${endX} ${endY}`,
-              color: isBlocked ? 'var(--state-blocked)' : 'var(--state-merged)',
+              color: isBlocked ? '#f85149' : '#3fb950',
               dash: isBlocked ? '4,4' : 'none'
             });
           }
@@ -127,35 +127,41 @@ export default function DependencyGraph({ prs, onSelectPr }) {
 
   if (graphPrs.length === 0) {
     return (
-      <div className="glass-panel" style={{
-        padding: '30px',
+      <div style={{
+        padding: '32px',
         textAlign: 'center',
-        color: 'var(--text-secondary)',
+        color: '#8b949e',
         fontSize: '13px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: '12px'
+        gap: '12px',
+        backgroundColor: '#161b22',
+        border: '1px solid #30363d',
+        borderRadius: '6px'
       }}>
-        <Link2 size={24} color="var(--text-muted)" />
+        <Link2 size={24} color="#8b949e" />
         <p>No dependency chains to map. Link pull requests inside their details view.</p>
       </div>
     );
   }
 
   return (
-    <div className="glass-panel" style={{
+    <div style={{
       padding: '24px',
       position: 'relative',
       overflowX: 'auto',
-      minHeight: '320px'
+      minHeight: '320px',
+      backgroundColor: '#161b22',
+      border: '1px solid #30363d',
+      borderRadius: '6px'
     }}>
       <div style={{ marginBottom: '20px' }}>
-        <h3 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '4px' }}>
+        <h3 style={{ fontSize: '15px', fontWeight: '600', color: '#f0f6fc', marginBottom: '4px' }}>
           Dependency Flow Map
         </h3>
-        <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-          Trace execution flow. Solid green lines indicate merged paths; dashed pink lines indicate active blocking paths.
+        <p style={{ fontSize: '12px', color: '#8b949e' }}>
+          Trace execution flow. Solid green lines indicate ready paths; dashed red lines indicate active blocking paths.
         </p>
       </div>
 
@@ -208,11 +214,11 @@ export default function DependencyGraph({ prs, onSelectPr }) {
             }}
           >
             <div style={{
-              fontSize: '10px',
-              fontWeight: '800',
+              fontSize: '11px',
+              fontWeight: '600',
               textTransform: 'uppercase',
-              color: 'var(--text-muted)',
-              borderBottom: '1px solid var(--border-light)',
+              color: '#8b949e',
+              borderBottom: '1px solid #30363d',
               paddingBottom: '6px',
               letterSpacing: '0.05em',
               textAlign: 'center'
@@ -231,36 +237,35 @@ export default function DependencyGraph({ prs, onSelectPr }) {
                   data-pr-id={pr._id}
                   onClick={() => onSelectPr(pr)}
                   style={{
-                    background: 'var(--bg-tertiary)',
+                    background: '#1f242c',
                     border: '1px solid',
-                    borderColor: hasBlocked ? 'rgba(217, 70, 239, 0.3)' : 'var(--border-light)',
-                    borderRadius: '12px',
+                    borderColor: hasBlocked ? 'rgba(248, 81, 73, 0.4)' : '#30363d',
+                    borderRadius: '6px',
                     padding: '12px 14px',
                     cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                    transition: 'all 0.15s',
                     position: 'relative'
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent-blue)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = hasBlocked ? 'rgba(217, 70, 239, 0.3)' : 'var(--border-light)'; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#8b949e'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = hasBlocked ? 'rgba(248, 81, 73, 0.4)' : '#30363d'; }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                    <GitPullRequest size={13} color={hasBlocked ? 'var(--state-blocked)' : 'var(--state-ready)'} />
-                    <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>
+                    <GitPullRequest size={13} color={hasBlocked ? '#f85149' : '#3fb950'} />
+                    <span style={{ fontSize: '11px', fontWeight: '600', color: '#8b949e' }}>
                       #{pr.number}
                     </span>
                   </div>
                   <div style={{
                     fontSize: '12px',
                     fontWeight: '600',
-                    color: 'var(--text-primary)',
+                    color: '#c9d1d9',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis'
                   }}>
                     {pr.title}
                   </div>
-                  <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.02em', fontWeight: '700' }}>
+                  <div style={{ fontSize: '11px', color: '#8b949e', marginTop: '4px' }}>
                     {pr.repository ? pr.repository.repoName : 'repo'}
                   </div>
                 </div>

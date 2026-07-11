@@ -226,6 +226,11 @@ export const addPRDependency = async (req, res) => {
         depPR.dependents.push(pr);
       }
 
+      // Emit event
+      if (req.app.get('io')) {
+        req.app.get('io').emit('prUpdated', { prId: pr._id });
+      }
+
       return res.status(200).json({
         message: 'Dependency relationship added successfully (Memory)',
         pr: {
@@ -268,6 +273,11 @@ export const addPRDependency = async (req, res) => {
       .populate('dependencies')
       .populate('dependents');
 
+    // Emit event
+    if (req.app.get('io')) {
+      req.app.get('io').emit('prUpdated', { prId: updatedPR._id });
+    }
+
     res.status(200).json({
       message: 'Dependency relationship added successfully',
       pr: updatedPR
@@ -293,6 +303,11 @@ export const deletePRDependency = async (req, res) => {
       pr.dependencies = pr.dependencies.filter(d => (d._id || d).toString() !== depId.toString());
       if (depPR) {
         depPR.dependents = depPR.dependents.filter(d => (d._id || d).toString() !== id.toString());
+      }
+
+      // Emit event
+      if (req.app.get('io')) {
+        req.app.get('io').emit('prUpdated', { prId: pr._id });
       }
 
       return res.status(200).json({
@@ -325,6 +340,11 @@ export const deletePRDependency = async (req, res) => {
       .populate('repository')
       .populate('dependencies')
       .populate('dependents');
+
+    // Emit event
+    if (req.app.get('io')) {
+      req.app.get('io').emit('prUpdated', { prId: updatedPR._id });
+    }
 
     res.status(200).json({
       message: 'Dependency relationship removed successfully',
@@ -450,6 +470,11 @@ export const syncRepos = async (req, res) => {
       } catch (repoError) {
         console.error(`Error syncing repository ${repo.name}:`, repoError.message);
       }
+    }
+
+    // Emit event
+    if (req.app.get('io')) {
+      req.app.get('io').emit('syncComplete', { totalSynced });
     }
 
     res.status(200).json({ message: `Sync complete. Processed PR records.`, totalSynced });

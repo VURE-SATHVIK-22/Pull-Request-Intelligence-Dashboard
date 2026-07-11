@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { io } from 'socket.io-client';
 import Navbar from './components/Navbar';
 import RepoManager from './components/RepoManager';
 import PRCard from './components/PRCard';
@@ -26,6 +27,27 @@ export default function App() {
   const [stateFilter, setStateFilter] = useState('open'); // open | merged | closed | all
   const [statusFilter, setStatusFilter] = useState(''); // '' | blocked | ready | standalone
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Socket.io integration
+  useEffect(() => {
+    const socketUrl = import.meta.env.PROD ? window.location.origin : 'http://localhost:5000';
+    const socket = io(socketUrl, { transports: ['websocket', 'polling'] });
+    
+    socket.on('prUpdated', () => {
+      console.log('Real-time update: PR updated');
+      fetchPRsList(selectedRepo?._id, stateFilter, statusFilter, searchQuery, false);
+    });
+
+    socket.on('syncComplete', () => {
+      console.log('Real-time update: Sync complete');
+      fetchPRsList(selectedRepo?._id, stateFilter, statusFilter, searchQuery, false);
+      setIsSyncing(false);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [selectedRepo, stateFilter, statusFilter, searchQuery]);
 
   // Initial Data Fetching
   const fetchData = async () => {
@@ -56,7 +78,8 @@ export default function App() {
     }
   };
 
-  const fetchPRsList = async (repoId, state, status, search) => {
+  const fetchPRsList = async (repoId, state, status, search, setLoader = true) => {
+    if (setLoader) setIsLoading(true);
     try {
       let url = `/api/prs?`;
       if (repoId) url += `repository=${repoId}&`;
@@ -80,6 +103,8 @@ export default function App() {
       }
     } catch (err) {
       console.error('Failed to fetch PR list:', err);
+    } finally {
+      if (setLoader) setIsLoading(false);
     }
   };
 
@@ -105,10 +130,8 @@ export default function App() {
       const res = await fetch('/api/prs/sync', { method: 'POST' });
       const data = await res.json();
       await fetchPRsList(selectedRepo?._id, stateFilter, statusFilter, searchQuery);
-      alert(`Sync complete! ${data.totalSynced || 0} pull requests updated.`);
     } catch (err) {
       alert('Sync failed: ' + err.message);
-    } finally {
       setIsSyncing(false);
     }
   };
@@ -173,9 +196,8 @@ export default function App() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || 'Failed to link dependency');
     
-    // Refresh modal details and main list
+    // Real-time events will trigger a refresh, but we update locally for fast UI
     setSelectedPr(data.pr);
-    fetchPRsList(selectedRepo?._id, stateFilter, statusFilter, searchQuery);
   };
 
   const handleDeleteDependency = async (prId, depId) => {
@@ -185,9 +207,7 @@ export default function App() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || 'Failed to delete dependency');
     
-    // Refresh modal details and main list
     setSelectedPr(data.pr);
-    fetchPRsList(selectedRepo?._id, stateFilter, statusFilter, searchQuery);
   };
 
   // Gemini AI Summary Trigger
@@ -203,12 +223,11 @@ export default function App() {
         aiSummary: data.aiSummary
       }));
     }
-    // Refresh main list
     fetchPRsList(selectedRepo?._id, stateFilter, statusFilter, searchQuery);
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', paddingBottom: '40px' }}>
+    <div className="flex" style={{ flexDirection: 'column', minHeight: '100vh', paddingBottom: '2.5rem' }}>
       
       {/* Navbar */}
       <Navbar 
@@ -219,13 +238,7 @@ export default function App() {
       />
 
       {/* Main Content Layout */}
-      <div style={{
-        display: 'flex',
-        margin: '10px 20px',
-        gap: '20px',
-        flexWrap: 'wrap',
-        alignItems: 'flex-start'
-      }}>
+      <div className="flex" style={{ margin: '24px', gap: '24px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
         
         {/* Left Sidebar Repository Panel */}
         <div style={{ flex: '1 1 280px', maxWidth: '320px' }}>
@@ -239,60 +252,132 @@ export default function App() {
         </div>
 
         {/* Right Dashboard Area */}
-        <div style={{ flex: '3 1 600px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="flex" style={{ flex: '3 1 600px', flexDirection: 'column', gap: '16px' }}>
           
-          {/* Dashboard Control Bar (Filters & Search) */}
-          <div className="glass-panel" style={{
-            padding: '20px',
+          {/* GitHub-like Filter and Search Bar */}
+          <div style={{
             display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            gap: '16px',
-            flexWrap: 'wrap'
+            flexDirection: 'column',
+            gap: '12px',
+            backgroundColor: '#161b22',
+            border: '1px solid #30363d',
+            borderRadius: '6px',
+            padding: '16px'
           }}>
-            {/* Search Input */}
-            <form onSubmit={handleSearchSubmit} style={{ display: 'flex', alignItems: 'center', position: 'relative', flex: '1 1 300px' }}>
-              <input
-                type="text"
-                placeholder="Search PR title, author, branch..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{
-                  width: '100%',
-                  background: 'var(--bg-tertiary)',
-                  border: '1px solid var(--border-light)',
-                  padding: '10px 16px 10px 42px',
-                  borderRadius: '10px',
-                  color: 'var(--text-primary)',
-                  fontSize: '13px',
-                  outline: 'none'
-                }}
-              />
-              <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '16px' }} />
-            </form>
+            <div className="flex justify-between items-center" style={{ gap: '12px', flexWrap: 'wrap' }}>
+              {/* Search Form */}
+              <form onSubmit={handleSearchSubmit} className="flex items-center" style={{ position: 'relative', flex: '1 1 300px' }}>
+                <input
+                  type="text"
+                  placeholder="Search PR title, author, branch..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{
+                    width: '100%',
+                    background: '#0d1117',
+                    border: '1px solid #30363d',
+                    padding: '6px 12px 6px 32px',
+                    borderRadius: '6px',
+                    color: '#c9d1d9',
+                    fontSize: '14px',
+                    height: '32px'
+                  }}
+                />
+                <Search size={14} className="text-secondary" style={{ position: 'absolute', left: '10px' }} />
+              </form>
 
-            {/* View Mode Toggle (Map Flow vs List Grid) */}
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button
-                onClick={() => setShowMap(!showMap)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  background: showMap ? 'rgba(139, 92, 246, 0.12)' : 'var(--bg-tertiary)',
-                  border: '1px solid',
-                  borderColor: showMap ? 'var(--accent-purple)' : 'var(--border-light)',
-                  color: showMap ? 'var(--text-primary)' : 'var(--text-secondary)',
-                  padding: '8px 16px',
-                  borderRadius: '10px',
-                  cursor: 'pointer',
-                  fontSize: '13px',
-                  fontWeight: '600'
-                }}
-              >
-                {showMap ? <Grid size={14} /> : <Map size={14} />}
-                <span>{showMap ? 'Show List Only' : 'Show Flow Map'}</span>
-              </button>
+              {/* View Map Toggle & Filter Reset */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowMap(!showMap)}
+                  className="btn btn-secondary"
+                  style={{
+                    height: '32px',
+                    padding: '0 12px',
+                    fontSize: '13px',
+                    borderColor: showMap ? '#58a6ff' : '#30363d',
+                    background: showMap ? 'rgba(88, 166, 255, 0.15)' : '',
+                    color: showMap ? '#58a6ff' : '#c9d1d9'
+                  }}
+                >
+                  {showMap ? <Grid size={14} style={{ marginRight: '6px' }} /> : <Map size={14} style={{ marginRight: '6px' }} />}
+                  <span>{showMap ? 'List View' : 'Flow Map'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* GitHub Style List Filter Bar */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              borderTop: '1px solid #30363d',
+              paddingTop: '12px',
+              marginTop: '4px',
+              flexWrap: 'wrap',
+              gap: '12px'
+            }}>
+              {/* State Tabs */}
+              <div className="flex gap-1">
+                {[
+                  { id: 'open', label: 'Open' },
+                  { id: 'merged', label: 'Merged' },
+                  { id: 'closed', label: 'Closed' },
+                  { id: 'all', label: 'All PRs' }
+                ].map((state) => (
+                  <button
+                    key={state.id}
+                    onClick={() => { setStateFilter(state.id); setStatusFilter(''); }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: stateFilter === state.id ? '#f0f6fc' : '#8b949e',
+                      padding: '4px 10px',
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                      fontWeight: stateFilter === state.id ? '600' : 'normal',
+                      borderRadius: '6px',
+                      transition: 'background-color 0.15s'
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#21262d'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                  >
+                    {state.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Dependency State Filter (Only if open state selected) */}
+              {stateFilter === 'open' && (
+                <div className="flex items-center gap-2">
+                  <span style={{ fontSize: '12px', color: '#8b949e' }}>Dependency:</span>
+                  <div className="flex gap-1" style={{ background: '#0d1117', padding: '2px', borderRadius: '6px', border: '1px solid #30363d' }}>
+                    {[
+                      { label: 'All', value: '' },
+                      { label: 'Blocked', value: 'blocked' },
+                      { label: 'Ready', value: 'ready' },
+                      { label: 'Standalone', value: 'standalone' }
+                    ].map((btn) => (
+                      <button
+                        key={btn.value}
+                        onClick={() => setStatusFilter(btn.value)}
+                        style={{
+                          background: statusFilter === btn.value ? '#21262d' : 'transparent',
+                          border: 'none',
+                          color: statusFilter === btn.value ? '#f0f6fc' : '#8b949e',
+                          padding: '3px 8px',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '11px',
+                          fontWeight: statusFilter === btn.value ? '600' : 'normal'
+                        }}
+                      >
+                        {btn.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -304,83 +389,16 @@ export default function App() {
             />
           )}
 
-          {/* Filtering Categories Bar */}
-          <div className="glass-panel" style={{
-            padding: '20px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '16px'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '700', color: 'var(--text-secondary)' }}>
-              <SlidersHorizontal size={14} />
-              <span>Filters</span>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px' }}>
-              {/* PR State Selector */}
-              <div style={{ display: 'flex', gap: '6px', background: 'var(--bg-tertiary)', padding: '4px', borderRadius: '10px', border: '1px solid var(--border-light)' }}>
-                {['open', 'merged', 'closed', 'all'].map((state) => (
-                  <button
-                    key={state}
-                    onClick={() => setStateFilter(state)}
-                    style={{
-                      background: stateFilter === state ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
-                      border: 'none',
-                      color: stateFilter === state ? 'var(--text-primary)' : 'var(--text-secondary)',
-                      padding: '6px 14px',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                      fontWeight: '700',
-                      textTransform: 'capitalize'
-                    }}
-                  >
-                    {state}
-                  </button>
-                ))}
-              </div>
-
-              {/* Dependency Status Filters */}
-              {stateFilter === 'open' && (
-                <div style={{ display: 'flex', gap: '6px', background: 'var(--bg-tertiary)', padding: '4px', borderRadius: '10px', border: '1px solid var(--border-light)' }}>
-                  {[
-                    { label: 'All', value: '' },
-                    { label: 'Blocked', value: 'blocked' },
-                    { label: 'Ready', value: 'ready' },
-                    { label: 'Standalone', value: 'standalone' }
-                  ].map((btn) => (
-                    <button
-                      key={btn.value}
-                      onClick={() => setStatusFilter(btn.value)}
-                      style={{
-                        background: statusFilter === btn.value ? 'rgba(139, 92, 246, 0.15)' : 'transparent',
-                        border: 'none',
-                        color: statusFilter === btn.value ? 'var(--text-primary)' : 'var(--text-secondary)',
-                        padding: '6px 14px',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        fontSize: '12px',
-                        fontWeight: '700'
-                      }}
-                    >
-                      {btn.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
           {/* List Display Grid */}
           {isLoading ? (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
+            <div className="flex justify-center items-center" style={{ minHeight: '200px' }}>
               <div className="spinner" />
             </div>
           ) : prs.length > 0 ? (
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-              gap: '20px'
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px'
             }}>
               {prs.map(pr => (
                 <PRCard 
@@ -391,19 +409,16 @@ export default function App() {
               ))}
             </div>
           ) : (
-            <div className="glass-panel" style={{
-              padding: '60px 20px',
+            <div className="glass-panel flex justify-center items-center" style={{
+              padding: '3.75rem 1.25rem',
               textAlign: 'center',
-              display: 'flex',
               flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
               color: 'var(--text-secondary)',
-              gap: '12px'
+              gap: '0.75rem'
             }}>
-              <GitPullRequest size={36} color="var(--text-muted)" />
-              <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>No Pull Requests Found</h3>
-              <p style={{ fontSize: '13px', maxWidth: '300px', lineHeight: '1.5' }}>
+              <GitPullRequest size={36} className="text-muted" />
+              <h3 className="text-base font-bold text-primary">No Pull Requests Found</h3>
+              <p className="text-sm" style={{ maxWidth: '300px', lineHeight: '1.5' }}>
                 Try changing your filters or click "Sync Git" above to pull branches from GitHub.
               </p>
             </div>
